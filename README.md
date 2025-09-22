@@ -33,3 +33,9 @@
 [1] [Работа с файлами в Python](https://github.com/ShadarRim/25AIMEPhI/blob/main/a01_%D0%A0%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_%D1%81_%D1%84%D0%B0%D0%B9%D0%BB%D0%B0%D0%BC%D0%B8.ipynb) \
 [2] [Math](https://github.com/ShadarRim/25AIMEPhI/blob/main/a02_%D0%9C%D0%BE%D0%B4%D1%83%D0%BB%D1%8C_math.ipynb) \
 [3] [Что делает этот код? Numpy](https://github.com/ShadarRim/25AIMEPhI/blob/main/a03_%D0%A7%D1%82%D0%BE_%D0%B4%D0%B5%D0%BB%D0%B0%D0%B5%D1%82_%D1%8D%D1%82%D0%BE%D1%82_%D0%BA%D0%BE%D0%B4.ipynb)
+
+# Олимпиады и конкурсы
+Участие в олимпиадах и конкурсах позволяет повысить итоговый балл в семестре. 
+
+Выход в финал добавляет баллы.
+[0] ["Я-профессионал"](https://yandex.ru/profi/)
