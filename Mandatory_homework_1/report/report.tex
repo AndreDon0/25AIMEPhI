@@ -1,0 +1,65 @@
+\documentclass{article} % Document class declaration
+
+\title{First Homework report} % Title of the document
+\author{Andrey Donetskov} % Author name
+\date{\today} % Date of compilation
+
+
+\begin{document} % Start of document content
+\maketitle % Generate title
+\newpage
+In this report, I will discuss two files: \textbf{statistics.ipynb} 
+and \textbf{visualization.ipynb}. Both files relate to the 
+\textbf{First Mandatory Homework} and cover \textbf{wrecked data}
+statistical analysis and corresponding visualizations.
+
+\section{Statistical analysis}
+
+First of all, I'm use \textit{pandas.DataFrame.describe()}
+option to view min, mean, max and quartiles of \textbf{wrecked data}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrrr}
+\hline
+Statistic & Weight (kg) & Body Length (cm) & Animal code & Latitude & Longitude \\
+\hline
+count & 984.000000 & 984.000000 & 0.0 & 913.000000 & 913.000000 \\
+mean  & 39.745503  & 39.107724  & NaN & 49.393369  & 18.203280  \\
+std   & 156.290076 & 58.628601  & NaN & 7.168900   & 3.899601   \\
+min   & -0.252000  & -19.000000 & NaN & -78.582973 & 11.074008  \\
+25\%  & 0.293000   & 19.000000  & NaN & 48.186913  & 14.384559  \\
+50\%  & 0.331500   & 21.000000  & NaN & 49.560723  & 18.944015  \\
+75\%  & 0.800000   & 23.000000  & NaN & 52.212433  & 21.033243  \\
+max   & 1100.000000 & 350.000000 & NaN & 52.853843  & 34.896734 \\
+\hline
+\end{tabular}
+\caption{Descriptive statistics for \textbf{wrecked data}}
+\end{table}
+
+In this section I used \textbf{cleaned data} in order of
+simplicity. It look like this:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\hline
+Statistic & Weight (kg) & Body length (cm) & Latitude & Longitude \\
+\hline
+count & 833.000000 & 833.000000 & 750.000000 & 750.000000 \\
+mean  & 46.720602  & 42.501043  & 49.743041  & 17.595264  \\
+std   & 168.843218 & 62.879887  & 1.851982   & 3.881169   \\
+min   & 0.200000   & 11.000000  & 47.316383  & 11.074008  \\
+25\%  & 0.297367   & 19.000000  & 48.186430  & 14.348471  \\
+50\%  & 0.349000   & 21.000000  & 49.545885  & 18.847488  \\
+75\%  & 1.000000   & 23.000000  & 52.211980  & 21.031909  \\
+max   & 1100.000000 & 350.000000 & 52.853843  & 23.919668  \\
+\hline
+\end{tabular}
+\caption{Descriptive statistics for \textbf{cleaned data}}
+\end{table}
+
+
+
+
+\end{document} % End of document
