@@ -1,4 +1,6 @@
 \documentclass{article} % Document class declaration
+\usepackage{hyperref} % For clickable links
+\usepackage{graphicx}
 
 \title{First Homework report} % Title of the document
 \author{Andrey Donetskov} % Author name
@@ -13,9 +15,157 @@ and \textbf{visualization.ipynb}. Both files relate to the
 \textbf{First Mandatory Homework} and cover \textbf{wrecked data}
 statistical analysis and corresponding visualizations.
 
+\section{Visual analysis}
+
+Here I trided my best to visualize and clean \cite{data_link}. Below you can see
+what it contains:
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{llllll}
+        \hline
+        & Animal type & Country & Weight kg & Body Length cm & Gender \\
+        \hline
+        0 & -- & -- & -- & -- & -- \\
+        1 & -- & -- & -- & -- & -- \\
+        2 & European bison & Poland & 930.000 & 335.0 & male \\
+        3 & European bison & Poland & 909.000 & 311.0 & not determined \\
+        4 & European bison\texttrademark & Poland & 581.000 & 277.0 & female \\
+        $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+        1006 & red squirrel & Poland & 0.346 & 20.0 & female \\
+        1007 & hedgehog & Germany & 1.000 & 23.0 & female \\
+        1008 & hedgehog & Germany & 0.500 & 17.0 & female \\
+        1009 & red squirrel & Poland & 0.346 & 20.0 & female \\
+        1010 & hedgehog & Hungary & 0.900 & 16.0 & female \\
+        \hline
+    \end{tabular}
+    \caption{Animal observation \textbf{wrecked data} part 1}
+    \label{tab:animal_data}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{llllllllllll}
+        \hline
+        & Animal code & Latitude & Longitude & Animal name & Observation date & Data compiled by \\
+        \hline
+        0 & -- & -- & -- & -- & 03.01.2024 & James Johnson \\
+        1 & -- & -- & -- & -- & 03.02.2024 & James Johnson \\
+        2 & -- & 52.828845 & 23.820144 & Szefu & 01.03.2024 & Anne Anthony \\
+        3 & -- & 52.830509 & 23.826849 & -- & 01.03.2024 & Anne Anthony \\
+        4 & -- & 52.834109 & 23.807093 & -- & 01.03.2024 & Anne Anthony \\
+        $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ \\
+        1006 & -- & 52.212001 & 21.033187 & Lola & 7 May 2024 & Anne Anthony \\
+        1007 & -- & 49.561356 & 11.105334 & -- & 7 May 2024 & Bob Bobson \\
+        1008 & -- & 49.561569 & 11.087046 & -- & 7 May 2024 & Bob Bobson \\
+        1009 & -- & 52.212001 & 21.033187 & Lola & 7 May 2024 & Anne Anthony \\
+        1010 & -- & 47.509860 & 18.939943 & -- & 8 May 2024 & Anne Anthony \\
+        \hline
+    \end{tabular}
+    \caption{Animal observation \textbf{wrecked data} part 2}
+    \label{tab:animal_data}
+\end{table}
+
+Yep. It pretty cursed. I cleaned it:
+
+\begin{enumerate}
+  \item Dropped rudimet columns.
+  \item Dropped lines with NaNs.
+  \item Stardartized objects manually renaming whem.
+  \item Multipy negative values by $-1$.
+\end{enumerate}
+
+After this I visualized everithing.
+
+\subsection{Count plots}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.45\textwidth]{images/genderplot.png}
+  \includegraphics[width=0.45\textwidth]{images/datacompliedbyplot.png}
+  \caption{Count plots of animal type and of data contibutor by gender.}
+  \label{fig:fig1}
+\end{figure}
+
+On~\ref{fig:fig1} gender distribution is normal but anumal type
+is not as well as data contibuting. Worth to take a closer look
+at James data.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.65\textwidth]{images/countryanimalcount.png}
+  \caption{Count plot of animal type by country and vise versa.}
+  \label{fig:fig2}
+\end{figure}
+
+On~\ref{fig:fig2} plots I note nothing exept that European bison lives in Australia.
+
+\subsection{Line plots}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/obsdategender.png}
+  \includegraphics[width=0.8\textwidth]{images/obsdateconpiled.png}
+  \caption{Line plots of observation date by gender and by data contibutor}
+  \label{fig:fig3}
+\end{figure}
+
+Rivising \ref{fig:fig3}:
+\begin{enumerate}
+  \item All data impliments in 2024.
+  \item James somewhat stanging out even more.
+\end{enumerate}
+
+\subsection{Hist and box plots}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/histweight.png}
+  \caption{Line plots of observation date by gender and by data contibutor}
+  \label{fig:fig4}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/boxweight.png}
+  \caption{Line plots of observation date by gender and by data contibutor}
+  \label{fig:fig5}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/histlength.png}
+  \caption{Line plots of observation date by gender and by data contibutor}
+  \label{fig:fig6}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\textwidth]{images/boxlength.png}
+  \caption{Line plots of observation date by gender and by data contibutor}
+  \label{fig:fig7}
+\end{figure}
 \section{Statistical analysis}
 
-First of all, I'm use \textit{pandas.DataFrame.describe()}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+\section{Statistical analysis}
+
+First of all, I used \textit{pandas.DataFrame.describe()}
 option to view min, mean, max and quartiles of \textbf{wrecked data}.
 
 \begin{table}[h]
@@ -37,7 +187,9 @@ max   & 1100.000000 & 350.000000 & NaN & 52.853843  & 34.896734 \\
 \caption{Descriptive statistics for \textbf{wrecked data}}
 \end{table}
 
-In this section I used \textbf{cleaned data} in order of
+Right now I greatly sorrow, that I'd thought of chosing~\cite{data_link}. It was a great mistake.
+
+Hence of this, in this section I used \textbf{cleaned data} in order of
 simplicity. It look like this:
 
 \begin{table}[h]
@@ -59,7 +211,8 @@ max   & 1100.000000 & 350.000000 & 52.853843  & 23.919668  \\
 \caption{Descriptive statistics for \textbf{cleaned data}}
 \end{table}
 
-
-
+\begin{thebibliography}{99}
+\bibitem{data_link} \href{https://www.kaggle.com/datasets/joannanplkrk/dirty-data-to-clean-whats-wrong-with-this-dataset}{Dirty data to clean What's wrong with this dataset}.
+\end{thebibliography}
 
 \end{document} % End of document
