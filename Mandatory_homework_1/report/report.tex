@@ -1,6 +1,7 @@
 \documentclass{article} % Document class declaration
 \usepackage{hyperref} % For clickable links
 \usepackage{graphicx}
+\usepackage{float}
 
 \title{First Homework report} % Title of the document
 \author{Andrey Donetskov} % Author name
@@ -98,7 +99,7 @@ at James data.
   \label{fig:fig2}
 \end{figure}
 
-On~\ref{fig:fig2} plots I note nothing exept that European bison lives in Australia.
+On~\ref{fig:fig2} plots I note nothing except that European bison lives in Australia.
 
 \subsection{Line plots}
 
@@ -118,48 +119,89 @@ Rivising \ref{fig:fig3}:
 
 \subsection{Hist and box plots}
 
-\begin{figure}[h!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{images/histweight.png}
-  \caption{Line plots of observation date by gender and by data contibutor}
+  \caption{Distribution of weight by animal type}
   \label{fig:fig4}
 \end{figure}
 
-\begin{figure}[h!]
+On~\ref{fig:fig4} nothing special except a very heavy lynx. 
+No. A VERY VERY \textbf{heavy} one.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{images/boxweight.png}
-  \caption{Line plots of observation date by gender and by data contibutor}
+  \caption{Bot plots of weight by animal type}
   \label{fig:fig5}
 \end{figure}
 
-\begin{figure}[h!]
+Here(\ref{fig:fig5}) the same lynx shine bright.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{images/histlength.png}
-  \caption{Line plots of observation date by gender and by data contibutor}
+  \caption{Distribution of lenght by animal type}
   \label{fig:fig6}
 \end{figure}
 
-\begin{figure}[h!]
+As~\ref{fig:fig4} on~\ref{fig:fig6} I notice mutative animal.
+Not lynx, but a new gigantic hedgehogs 150 cm long. What a monsters...
+I guess it a new spicies bred by creazy Russian scientists.
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{images/boxlength.png}
-  \caption{Line plots of observation date by gender and by data contibutor}
+  \caption{Bot plots of lenght by animal type}
   \label{fig:fig7}
 \end{figure}
-\section{Statistical analysis}
 
+At this moment I have no idea why I must use box plots.
+They're the same as hist plots or even less intuitive.
 
+\subsection{Pair plot}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/pairplot.png}
+  \caption{Pair plot of lenght and weight}
+  \label{fig:fig8}
+\end{figure}
 
+Dataset contains 4 decimal parametrs:
 
+\begin{enumerate}
+  \item Weight (kg)
+  \item Lenght (kg)
+  \item Latitude
+  \item Longitude
+\end{enumerate}
 
+I create a pairplot of only two weight and lenghtas most interesting.
+It rudiment to weight to lenght \textit{"simple"} plot.
+Let's see it too:
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/pairplotconsequince.png}
+  \caption{Scatter plot of lenght and weight}
+  \label{fig:fig9}
+\end{figure}
 
+We can see some correlation, but I cannot say anything
+before I'd see correlation coefficients.
 
+\subsection{Geo-visualization}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/image.png}
+  \caption{Data scattering}
+  \label{fig:fig10}
+\end{figure}
 
-
-
-
+In this section, I want somehow visualize 2 more columns
+from dataset. Here some clever way of geo-visualization.
 
 \newpage
 
@@ -189,7 +231,8 @@ max   & 1100.000000 & 350.000000 & NaN & 52.853843  & 34.896734 \\
 
 Right now I greatly sorrow, that I'd thought of chosing~\cite{data_link}. It was a great mistake.
 
-Hence of this, in this section I used \textbf{cleaned data} in order of
+Hence of this, in this section if I didn't tell another,
+I used \textbf{cleaned data} in order of
 simplicity. It look like this:
 
 \begin{table}[h]
@@ -210,6 +253,60 @@ max   & 1100.000000 & 350.000000 & 52.853843  & 23.919668  \\
 \end{tabular}
 \caption{Descriptive statistics for \textbf{cleaned data}}
 \end{table}
+
+\subsection{Correlation}
+
+Below~\ref{fig:fig11} I pin correlation maps. On this 
+I can notice very strong normal correlation between weight
+and lenght. Also Kendall correlation didn't show anithing.
+It's strange. Let's try view correlation on diffetent
+animal types.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{images/corrheatmap.png}
+  \includegraphics[width=0.9\textwidth]{images/corrheatmap2.png}
+  \caption{Normal and Kendall correlation}
+  \label{fig:fig11}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\textwidth]{images/pairheatmap.png}
+  \includegraphics[width=0.75\textwidth]{images/pairheatmap2.png}
+  \caption{Normal and Kendall correlation}
+  \label{fig:fig12}
+\end{figure}
+
+On~\ref{fig:fig12} 4 normal correlation heat maps
+and 4 Kendall correlation maps. As I can notice
+This data is more optimistic. However 
+$$ E[Bison(kg)] = 0.9 * E[Bison(cm)] $$
+feels as well strange.
+Although, as expected, latitude and longitude didn't
+correlate with anithing much.
+Let's move on with this wonderful quote:
+
+\textit{"Correlation does not imply causation" }
+
+\subsection{Is lynx? lynx?}
+
+When I wrote \textit{dirty\_data["Animal\_type"].unique()}, I discovered class lynx?:
+\begin{verbatim}
+array([nan, 'European bison', 'European bison™', 'European bisson',
+       'European buster', 'lynx', 'lynx?', 'red squirel', 'red squirrel',
+       'red squirrell', 'hedgehog', 'wedgehod', 'ledgehod'], dtype=object)
+\end{verbatim}
+I found question \textit{"Is lynx? lynx?"} interesting to me.
+Let's find it out!
+
+First of all I tryed to use t-values:
+\begin{enumerate}
+  \item For \textbf{body length in cm}: $$t-statistic: -0.5793803445653539, p-value: 0.5642194350169902$$
+  \item For \textbf{weight in kg}: $$t-statistic: 0.28872058707288334, p-value: 0.7736608274782608$$
+\end{enumerate}
+For both cases $p-value >> 0.05$, this mean significant differences in classes. 
+I'd already lost trast in statistic\dots
 
 \begin{thebibliography}{99}
 \bibitem{data_link} \href{https://www.kaggle.com/datasets/joannanplkrk/dirty-data-to-clean-whats-wrong-with-this-dataset}{Dirty data to clean What's wrong with this dataset}.
