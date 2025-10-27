@@ -1,0 +1,335 @@
+\documentclass[a4paper,12pt]{article}
+	\usepackage[left=2cm,right=1cm,top=1cm,bottom=1.5cm]{geometry}
+	\usepackage[utf8]{inputenc}
+	\usepackage[english,russian]{babel}
+	\usepackage{graphicx}
+	\usepackage{amsmath}
+	\usepackage{amssymb}
+	\usepackage{cite}
+	\usepackage{indentfirst}
+	\usepackage{multicol}
+	\usepackage{cmap}
+	\usepackage{hyperref}
+	\usepackage{multirow}
+	
+	\sloppy
+	
+	\usepackage{geometry}
+	\geometry{top=2cm}
+	\geometry{bottom=2cm}
+	\geometry{left=2.5cm}
+	\geometry{right=2.5cm}
+	
+	\renewcommand{\baselinestretch}{1.5}
+	
+	\begin{document}
+		\renewcommand{\contentsname}{\Large Содержание}
+		\renewcommand{\bibname}{\normalfont\Large\bfseries Список литературы}
+		
+		\begin{titlepage}
+			\begin{center}
+				Министерство науки и высшего образования Российской Федерации \\
+				НАЦИОНАЛЬНЫЙ ИССЛЕДОВАТЕЛЬСКИЙ ЯДЕРНЫЙ УНИВЕРСИТЕТ <<МИФИ>> \\*
+				\hrulefill
+			\end{center}
+		
+		\begin{center}
+			ИНСТИТУТ ЛАЗЕРНЫХ И ПЛАЗМЕННЫХ ТЕХНОЛОГИЙ\\
+			КАФЕДРА №31 ПРИКЛАДНАЯ МАТЕМАТИКА
+		\end{center}
+		\vspace{1cm}
+		
+		\vspace{2em}
+		
+		\begin{center}
+			\large Домашнее задание
+            по курсу <<Машинное обучение>>
+		\end{center}
+
+
+		\begin{center}
+			\large Выборочный анализ данных об авиационных происшествиях
+		\end{center}
+
+		\vspace{20em}
+
+		\vbox{%
+			\hfill%
+			\vbox{%
+				\hbox{\large{Отчёт выполнил:}}
+				\hbox{Будников Никита Евгеньевич}%
+			}%
+		}	 
+	
+
+\vspace{11em}
+		
+		\begin{center}
+			г. Москва 2025
+		\end{center}
+	\end{titlepage}
+
+	\newpage
+	
+	\tableofcontents
+	
+	\newpage
+
+\section{Введение}
+Данный отчёт представляет выборочный анализ набора данных об авиационных
+происшествиях за период с $1919$ по $2025$ год. Исследование проводилось с
+использованием \verb|Python| в \verb|Jupyter Notebook| и включало анализ $37,557$
+записей о авиационных инцидентах.
+
+\subsection{Ссылка на датасет}
+
+\href{https://www.kaggle.com/datasets/ravindrasinghrana/airplane-crashes-since-1919}
+{https://www.kaggle.com/datasets/ravindrasinghrana/airplane-crashes-since-1919}
+
+\subsection{Структура данных}
+Набор данных содержит 27 признаков, которые можно разделить на несколько категорий.
+Наиболее интересной представляется информация, связанная с датой происшествия,
+типом воздушного судна, количеством жертв на борту и налётом экипажа данного рейса.
+Для более удобной работы с датами был использован встроенный формат данных
+\verb|pandas.Timestamp|, позволяющий совершать над датами арифметические операции.
+
+\subsubsection{Основная информация о происшествии}
+\begin{itemize}
+    \item \textbf{Date} --- дата и время происшествия (парсинг в формате \verb|dd-mm-yyyy HH:MM|)
+    \item \textbf{Type\_of\_aircraft} --- тип воздушного судна
+    \item \textbf{Operator} --- оператор/авиакомпания
+    \item \textbf{Registration} --- регистрационный номер ВС
+    \item \textbf{Flight\_Phase} --- фаза полёта во время происшествия
+    \item \textbf{Flight\_Type} --- тип полёта (пассажирский, грузовой, учебный и т.д.)
+    \item \textbf{Survivors} --- наличие выживших
+    \item \textbf{Site} --- место происшествия
+    \item \textbf{Schedule} --- расписание/маршрут полёта
+\end{itemize}
+
+\subsubsection{Информация о жертвах}
+\begin{itemize}
+    \item \textbf{Crew\_on\_board} --- количество членов экипажа на борту
+    \item \textbf{Crew\_fatalities} --- количество погибших членов экипажа
+    \item \textbf{Pax\_on\_board} --- количество пассажиров на борту
+    \item \textbf{Pax\_fatalities} --- количество погибших пассажиров
+    \item \textbf{Other\_fatalities} --- количество других погибших (на земле)
+    \item \textbf{Total\_fatalities} --- общее количество погибших
+\end{itemize}
+
+\subsubsection{Техническая и эксплуатационная информация}
+\begin{itemize}
+    \item \textbf{MSN} --- Manufacturer Serial Number --- номер ВС от производителя
+    \item \textbf{YOM} --- Year of Manufacture --- год производства
+    \item \textbf{Location} --- местоположение крушения 
+    \item \textbf{Country} --- страна крушения
+    \item \textbf{Region} --- регион крушения (Европа, Азия и т.д.)
+    \item \textbf{Flight\_number} --- номер рейса
+\end{itemize}
+
+\subsubsection{Данные о экипаже и воздушном судне}
+\begin{itemize}
+    \item \textbf{Captain\_Total\_flying\_hours} --- общий налёт капитана
+    \item \textbf{Captain\_Total\_hours\_on\_type} --- налёт капитана на данном типе ВС
+    \item \textbf{Copilot\_Total\_flying\_hours} --- общий налёт второго пилота
+    \item \textbf{Copilot\_Total\_hours\_on\_type} --- налёт второго пилота на данном типе ВС
+    \item \textbf{Aircraft\_flight\_hours} --- общий налёт воздушного судна
+    \item \textbf{Aircraft\_flight\_cycles} --- количество циклов полёта ВС
+\end{itemize}
+
+\section{Результаты анализа}
+
+\subsection{Анализ качества данных и пропущенных значений}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\textwidth]{images/NaNCount.png}
+\caption{Визуализация распределения пропущенных значений по всем переменным}
+\label{fig:missing_values}
+\end{figure}
+
+На рисунке \ref{fig:missing_values} представлена комплексная визуализация пропущенных значений.
+График показывает долю пропущенных данных для каждой переменной в наборе, что позволяет оценить
+качество данных по каждому признаку.
+
+К сожалению, наиболее интересные для анализа столбцы, связанные с информацией о налёте
+капитана, второго пилота и воздушного судна, содержат слишком много пропусков, и от их
+исследования придётся отказаться.
+
+\subsection{Некоторая интересная статистика}
+
+\subsubsection{Статистика по типам самолётов}
+
+На рисунке \ref{fig:losses} изображена статистика по типам самолётов, наиболее часто
+попадавших в катастрофы.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{images/TopOfCrushedPlanes.png}
+\caption{Самолёты, наиболее часто попадавшие в катастрофы}
+\label{fig:losses}
+\end{figure}
+
+Первенство самолёта \verb|Douglas DC-3|, также известного под обозначением для
+американских ВВС \verb|Douglas C-47 Skytrain|, связано с невероятной популярностью и
+массовостью данной модели. За всё время выпуск составил более $16000$ единиц.
+Это был основной военно-транспортный самолёт США во время Второй мировой войны. 
+
+На втором месте также расположился самолёт времён Второй мировой войны: английский 
+\verb|Bristol Blenheim|. Значительные потери этих самолётов могут быть связаны
+с устареванием конструкции к началу войны и тяжестью боёв с более подготовленным
+противником. 
+
+Третьей по количеству крушений расположена польская модификация советского послевоенного
+самолёта \verb|АН-2|, выпущенная серией около $12000$ машин (всего выпуск \verb|АН-2|
+составил более $18000$ единиц). 
+
+Аналогичная статистика, но по странам крушения, представлена на рисунке \ref{fig:countries_losses}.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{images/TopOfCountriesCrushedPlanes.png}
+\caption{Страны, в которых чаще всего происходили катастрофы}
+\label{fig:countries_losses}
+\end{figure}
+
+В страны, в которых крушения происходили чаще, чем на нейтральной территории, входят
+США, Великобритания, Россия (СССР), Франция, Германия и Канада. Самые развитые
+и большие страны, в которых авиасообщение достаточно интенсивно в сочетании
+с большой территорией. Кроме того, на территории Великобритании, России, Франции
+и Германии шли интенсивные воздушные бои, в которых гибли многие самолёты.
+
+Например, на рисунке \ref{fig:BoB_losses} изображена статистика потерь самолётов
+в битве за Британию, проходившей с 10 июля по 30 октября 1940 года.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{images/BoBCrushedPlanes.png}
+\caption{Самолёты, погибшие в битве за Британию}
+\label{fig:BoB_losses}
+\end{figure}
+
+Наибольшие потери несли английские \verb|Bristol Blenheim|, \verb|Handley Page HP.52|
+\verb|Hampden| и немецкие \verb|Heinkel He.111|. При этом потери королевских ВВС превосходят
+потери Люфтваффе, что не верно в общем контексте. Вероятно, в набор данных не попало большинство
+немецких потерь, которые не были задокументированы. Кроме того, в исследуемом наборе не
+отражены потери истребителей и ударных самолётов.
+
+Если оценивать распределение потерь по годам, то выяснится, что самым интенсивным
+с точки зрения авиакатастроф был $1942$ год (см. рис. \ref{fig:years_losses}). В это
+время начинаются интенсивные налёты бомбардировщиков на территорию Германии,
+ПВО которой ещё достаточно сильна для отражения атак. Этим и объясняются большие
+потери в английских бомбардировщиках (см. рис. \ref{fig:1942_losses}), которые
+занимают первые 9 строчек потерь.
+
+На 10 же строчке расположились советские \verb|По-2|, легкомоторные медленные самолёты,
+в основном использовавшиеся как почтовые. В целом можно отметить, что статистика
+не включает информацию о многих советских самолётах.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\textwidth]{images/YearsCrushedPlanes.png}
+\caption{Потери самолётов по годам}
+\label{fig:years_losses}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\textwidth]{images/1942CrushedPlanes.png}
+\caption{Потери самолётов за 1942 год}
+\label{fig:1942_losses}
+\end{figure}
+
+\subsubsection{Локации и фазы полёта, в которых чаще происходили крушения}
+
+Имеет смысл разбить анализируемый набор данных на два: крушения до 1980 года и после.
+С 1980 года заканчиваются основные военные конфликты и начинается переход к современной
+системе управления полётами, что вносит значительный вклад.
+
+На рисунках \ref{fig:bef80Loc} и \ref{fig:bef80Ph} можно видеть статистику
+до 1980 года. Чаще всего крушения происходили во время полёта вблизи аэродромов
+или на равнинной местности.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.88\textwidth]{images/LocationCrusedPlanesBefore1980.png}
+\caption{Место крушения самолёта}
+\label{fig:bef80Loc}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.88\textwidth]{images/FlightPhaseCrusedPlanesBefore1980.png}
+\caption{Фаза полёта, в которой произошло крушение}
+\label{fig:bef80Ph}
+\end{figure}
+
+Статистика после 1980 года значительно отличается (см. рис. \ref{fig:aft80Loc} и \ref{fig:aft80Ph}).
+Крушения всё также в основном происходят вблизи аэропортов, но уже значительно чаще, чем на равнинной
+местности. Самой опасной фазой полёта становится посадка, что подтверждается известной
+из других источников статистикой.  
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\textwidth]{images/LocationCrusedPlanesAfter1980.png}
+\caption{Место крушения самолёта}
+\label{fig:aft80Loc}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.95\textwidth]{images/FlightPhaseCrusedPlanesAfter1980.png}
+\caption{Фаза полёта, в которой произошло крушение}
+\label{fig:aft80Ph}
+\end{figure}
+
+\subsection{Статистические тесты}
+В анализе были подготовлены следующие статистические тесты:
+\begin{itemize}
+    \item Проведён тест на нормальность распределения числа погибших;
+    \item Построен доверительный интервал для математического ожидания числа погибших;
+    \item Проверена гипотеза равенства математических ожиданий числа членов экипажа
+    и погибших членов экипажа.
+\end{itemize}
+
+\subsubsection{Нормальность распределения числа погибших}
+
+Q-Q кривая для числа погибших представлена на рисунке \ref{fig:QQ}. Данная кривая
+значительно отклоняется от проведённой биссектрисы, поэтому можно утверждать,
+что число погибших не распределено нормально.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.7\textwidth]{images/QQTotalFatalities.png}
+\caption{Q-Q кривая числа погибших}
+\label{fig:QQ}
+\end{figure}
+
+Для дополнительной проверки был проведён тест Шапиро-Уилка, который
+также показал, что распределение числа погибших не является нормальным.
+
+\subsubsection{Доверительный интервал для числа погибших}
+
+Построим доверительный интервал для математического ожидания с
+доверительной вероятностью $0,95$. Для этого используется распределение
+Стьюдента (т.к. дисперсия неизвестна). В итоге получим значения
+$[4,75;5,05]$. 
+
+\subsubsection{Равенство математических ожиданий числа членов экипажа и
+числа погибших членов экипажа}
+
+Для проверки равенства математических ожиданий двух различных распределений
+используется двухвыборочный критерий Стьюдента. В итоге получим \verb|p-value|,
+равное $0$, что значит, что математические ожидания не совпадают.
+
+На рисунке \ref{fig:t2-test} представлено соотношение между жертвами среди
+экипажа и членами экипажа на борту во время крушения.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.7\textwidth]{images/CrewFatalities.png}
+\caption{Число погибших членов экипажа и число членов экипажа на борту}
+\label{fig:t2-test}
+\end{figure}
+
+
+\end{document}
