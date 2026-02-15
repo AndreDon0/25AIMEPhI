@@ -1,7 +1,9 @@
 import numpy as np
 
 class Tensor:
+    # '_' mean - "Don't access or rely on these directly—treat as private, subject to change without notice."
     def __init__(self, data, requires_grad=False, _children=(), _op=""):
+        # Почему 2 раза одно и то же? Как вообще преобразовать list(str)?
         if isinstance(data, (list, tuple)):
             data = np.array(data, dtype=np.float32)
         elif isinstance(data, (int, float, np.number)):
@@ -14,12 +16,13 @@ class Tensor:
         self.grad = None
         self._backward = lambda: None
         self._prev = set(_children)
-        self._op = _op
+        self._op = _op  # Do we really need this?
 
     @property
     def shape(self):
         return self.data.shape
 
+    # Fine
     def __repr__(self):
         return f"Tensor(data={self.data}, requires_grad={self.requires_grad})"
 
@@ -30,36 +33,29 @@ class Tensor:
                      _children=(self, other), _op="add")
 
         def _backward():
+            # 很么？See normal backward.
             if out.grad is None:
                 return
 
-            if self.requires_grad:
-                if self.grad is None:
-                    self.grad = np.zeros_like(self.data)
-                grad_self = out.grad
+            def compute_grad(tensor): # Зачем все это ксти в C все равно написано array[c*n + b]
+                if tensor.grad is None:
+                    tensor.grad = np.zeros_like(tensor.data)
+                grad = out.grad
 
-                while grad_self.ndim > self.data.ndim:
-                    grad_self = grad_self.sum(axis=0)
+                while grad.ndim > tensor.data.ndim:
+                    grad = grad.sum(axis=0)
 
-                for i, (gs, xs) in enumerate(zip(grad_self.shape, self.data.shape)):
+                for i, (gs, xs) in enumerate(zip(grad.shape, tensor.data.shape)):
                     if xs == 1 and gs != 1:
-                        grad_self = grad_self.sum(axis=i, keepdims=True)
+                        grad = grad.sum(axis=i, keepdims=True)
+                
+                tensor.grad += grad
 
-                self.grad += grad_self
+            if self.requires_grad:
+                compute_grad(self)
 
             if other.requires_grad:
-                if other.grad is None:
-                    other.grad = np.zeros_like(other.data)
-                grad_other = out.grad
-
-                while grad_other.ndim > other.data.ndim:
-                    grad_other = grad_other.sum(axis=0)
-
-                for i, (gs, xs) in enumerate(zip(grad_other.shape, other.data.shape)):
-                    if xs == 1 and gs != 1:
-                        grad_other = grad_other.sum(axis=i, keepdims=True)
-
-                other.grad += grad_other
+                compute_grad(other)
 
         out._backward = _backward
         return out
@@ -77,34 +73,26 @@ class Tensor:
         def _backward():
             if out.grad is None:
                 return
+            
+            def compute_grad(tensor):
+                if tensor.grad is None:
+                    tensor.grad = np.zeros_like(tensor.data)
+                grad = out.grad * other.data
+
+                while grad.ndim > tensor.data.ndim:
+                    grad = grad.sum(axis=0)
+
+                for i, (gs, xs) in enumerate(zip(grad.shape, tensor.data.shape)):
+                    if xs == 1 and gs != 1:
+                        grad = grad.sum(axis=i, keepdims=True)
+
+                tensor.grad += grad
 
             if self.requires_grad:
-                if self.grad is None:
-                    self.grad = np.zeros_like(self.data)
-                grad_self = out.grad * other.data
-
-                while grad_self.ndim > self.data.ndim:
-                    grad_self = grad_self.sum(axis=0)
-
-                for i, (gs, xs) in enumerate(zip(grad_self.shape, self.data.shape)):
-                    if xs == 1 and gs != 1:
-                        grad_self = grad_self.sum(axis=i, keepdims=True)
-
-                self.grad += grad_self
+                compute_grad(self)
 
             if other.requires_grad:
-                if other.grad is None:
-                    other.grad = np.zeros_like(other.data)
-                grad_other = out.grad * self.data
-
-                while grad_other.ndim > other.data.ndim:
-                    grad_other = grad_other.sum(axis=0)
-
-                for i, (gs, xs) in enumerate(zip(grad_other.shape, other.data.shape)):
-                    if xs == 1 and gs != 1:
-                        grad_other = grad_other.sum(axis=i, keepdims=True)
-
-                other.grad += grad_other
+                compute_grad(other)
 
         out._backward = _backward
         return out
@@ -121,7 +109,7 @@ class Tensor:
     def __rsub__(self, other):
         return other + (-self)
 
-    def matmul(self, other):
+    def matmul(self, other): # В torch такое было?
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data @ other.data,
                      requires_grad=self.requires_grad or other.requires_grad,
@@ -131,7 +119,7 @@ class Tensor:
             if self.requires_grad:
                 if self.grad is None:
                     self.grad = np.zeros_like(self.data)
-                self.grad += out.grad @ other.data.T
+                self.grad += out.grad @ other.data.T  # Математика, которую я не изучал, а вот Qwen...
             if other.requires_grad:
                 if other.grad is None:
                     other.grad = np.zeros_like(other.data)
@@ -140,10 +128,10 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __matmul__(self, other):
+    def __matmul__(self, other): # Didn't know this.
         return self.matmul(other)
 
-    def sum(self, axis=None, keepdims=False):
+    def sum(self, axis=None, keepdims=False): # Думаю keepdim лишний...
         out = Tensor(self.data.sum(axis=axis, keepdims=keepdims),
                      requires_grad=self.requires_grad,
                      _children=(self,), _op="sum")
@@ -161,6 +149,7 @@ class Tensor:
         out._backward = _backward
         return out
 
+    # WOW!!! torch.tensor([-1, 0, 1]).relu() actually exist!
     def relu(self):
         out_data = np.maximum(self.data, 0)
         out = Tensor(out_data, requires_grad=self.requires_grad,
@@ -171,43 +160,36 @@ class Tensor:
                 return
             if self.grad is None:
                 self.grad = np.zeros_like(self.data)
-            grad = out.grad * (self.data > 0)
+            grad = out.grad * (self.data > 0) # That's why I love relu. It's compute so fast!
             self.grad += grad
 
         out._backward = _backward
         return out
 
+    # 很好。
+    @staticmethod
+    def build_topo(t, _visited=None):
+        if _visited is None:
+            _visited = set()
+        topo = []
+        if t not in _visited:
+            _visited.add(t)
+            for child in t._prev:
+                topo.extend(Tensor.build_topo(child, _visited=_visited))
+            topo.append(t)
+        return topo
+
     def backward(self):
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = np.ones_like(self.data) # 没错。
 
-        topo = []
-        visited = set()
-
-        def build_topo(t):
-            if t not in visited:
-                visited.add(t)
-                for child in t._prev:
-                    build_topo(child)
-                topo.append(t)
-
-        build_topo(self)
+        topo = Tensor.build_topo(self)
 
         for t in reversed(topo):
             t._backward()
 
     def zero_grad(self):
-        topo = []
-        visited = set()
-
-        def build_topo(t):
-            if t not in visited:
-                visited.add(t)
-                for child in t._prev:
-                    build_topo(child)
-                topo.append(t)
-
-        build_topo(self)
+        topo = Tensor.build_topo(self)
         for t in topo:
             t.grad = None
 
