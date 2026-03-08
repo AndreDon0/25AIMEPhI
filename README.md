@@ -41,7 +41,13 @@
 
 [24] [О нейронных сетях](https://github.com/ShadarRim/25AIMEPhI/blob/main/24_%D0%9D%D0%B5%D0%B9%D1%80%D0%BE%D0%BD%D0%BD%D1%8B%D0%B5%20%D1%81%D0%B5%D1%82%D0%B8.pptx)\
 [25] [Tensor Torch](https://github.com/ShadarRim/25AIMEPhI/blob/main/25_%D0%A2%D0%B5%D0%BD%D0%B7%D0%BE%D1%80%D1%8B_Torch.ipynb)\
-[26] [Tensor Torch вручную](https://github.com/ShadarRim/25AIMEPhI/blob/main/26_Tensor%20with%20broadcast.ipynb)
+[26] [Tensor Torch вручную](https://github.com/ShadarRim/25AIMEPhI/blob/main/26_Tensor%20with%20broadcast.ipynb) \
+[27] [Модицифкация градиентного спуска](https://github.com/ShadarRim/25AIMEPhI/blob/main/27_%D0%9C%D0%BE%D0%B4%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%B8_%D0%B3%D1%80%D0%B0%D0%B4%D0%B8%D0%B5%D0%BD%D1%82%D0%BD%D0%BE%D0%B3%D0%BE_%D1%81%D0%BF%D1%83%D1%81%D0%BA%D0%B0.ipynb) \
+[28] [Нейронная сеть без градиентого спуска](https://github.com/ShadarRim/25AIMEPhI/blob/main/28_%D0%9E%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B1%D0%B5%D0%B7_%D0%B3%D1%80%D0%B0%D0%B4%D0%B8%D0%B5%D0%BD%D1%82%D0%B0.ipynb) \
+[29] [НС для задачи классификации](https://github.com/ShadarRim/25AIMEPhI/blob/main/30_%D0%9D%D0%A1_%D0%9A%D0%BB%D0%B0%D1%81%D1%81%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D1%8F.ipynb) \
+[30] [НС для задачи регрессии](https://github.com/ShadarRim/25AIMEPhI/blob/main/31_%D0%9D%D0%A1_%D0%A0%D0%B5%D0%B3%D1%80%D0%B5%D1%81%D1%81%D0%B8%D1%8F.ipynb) \
+[31] [CNN](https://github.com/ShadarRim/25AIMEPhI/blob/main/32_%D0%A1%D0%B2%D1%91%D1%80%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B5%20%D1%81%D0%B5%D1%82%D0%B8.pptx) \
+[32] [MNIST](https://github.com/ShadarRim/25AIMEPhI/blob/main/33_MNIST_CNN.ipynb) \
 
 
 # Самостоятельная работа на паре
@@ -66,7 +72,11 @@
 
 # Домашенее задание весеннего семестра
 [11] [Контест на Torch](https://contest.yandex.ru/contest/90000/standings/) \
-[12] Обязательное ДЗ№1. Разъяснить каждую строчку Tensor написаного с нуля.
+[12] Обязательное ДЗ№1. Разъяснить каждую строчку Tensor написаного с нуля. \
+[13] Обязательное ДЗ№2. Решить задачу регресии из прошлого семестра с использованием полносвязной НС. \
+[14] Обязательное ДЗ№3. Решить задачу классификации из прошлого семестра с использованием полносвязной НС. \
+[15] [Обязательное ДЗ№4. Решить задачу классификации бабочек (late submission).](https://www.kaggle.com/competitions/classification-of-butterflies) \
+[16] Обязательное ДЗ№5. Повысить точность решения MNIST до 98%.
 
 # Дополнительные материалы
 [0] [Пара фишек по работе с Python](https://github.com/ShadarRim/25AIMEPhI/blob/main/a00_%D0%9F%D0%B0%D1%80%D0%B0_%D1%84%D0%B8%D1%88%D0%B5%D0%BA%20Python.ipynb)\
