@@ -1,0 +1,37 @@
+---
+description: Git fork sync and Students/ folder constraint for this repo
+globs: "**/.gitattributes,**/.gitignore"
+alwaysApply: false
+---
+
+# Git fork sync and Students/ folder
+
+This repo is a fork. When syncing with the original (upstream), follow these rules.
+
+## Sync with upstream
+
+- Use **merge**, not pull: `git merge upstream/main` after `git fetch upstream`.
+- Upstream remote: `https://github.com/ShadarRim/25AIMEPhI.git` (add as `upstream` if missing).
+
+## Students/ folder must not be merged in
+
+The **Students/** directory is excluded from this fork. Do not re-add it or allow upstream to re-introduce it when merging.
+
+- **Do not** suggest adding, restoring, or merging contents under `Students/`.
+- If the user or a merge tries to bring in `Students/`, keep it removed and ensure the merge driver is in place.
+
+## Merge driver (keep Students/ out)
+
+To make future merges from upstream never re-add `Students/`:
+
+1. **.gitattributes** in repo root must contain:
+   ```
+   Students/** merge=keepOurs
+   ```
+
+2. **Local Git config** (once per clone):
+   ```bash
+   git config merge.keepOurs.driver true
+   ```
+
+If you edit or suggest Git workflow in this repo, preserve this constraint for future generations.
