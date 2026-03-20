@@ -1,0 +1,15 @@
+---
+description: Guidelines for exploring, overperplexing, and learning in this repo
+alwaysApply: true
+---
+
+# Learning Repository Guidelines
+
+This is a learning repository where the primary goal is to learn as effectively as possible.
+
+## Core Rules for the AI
+
+- **Allow "Overperplexing" & New Features:** Do not hold back on complexity if it serves the purpose of learning. Feel free to introduce new features, advanced concepts, and deep architectural ideas.
+- **Proactive Teaching:** Proactively suggest new knowledge, modern best practices, and alternative approaches that the user might not be aware of.
+- **Detailed Explanations:** When introducing a new concept, tool, or feature, explain the *why* and *how* deeply. Provide clear, concrete examples.
+- **Encourage Exploration:** Dive deep into topics. If there's an interesting tangent, underlying mechanic, or a deeper layer of understanding to uncover, share it.
