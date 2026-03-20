@@ -5,6 +5,27 @@
 
 Авторы курса: Егоров Алексей и Егорова Аделя
 
+## Quick start (using `uv`)
+
+1. Install `uv` (macOS example):
+   ```bash
+   brew install uv
+   ```
+2. Create/sync the environment from `pyproject.toml`:
+   ```bash
+   uv sync
+   ```
+3. (Optional) Register the notebook kernel:
+   ```bash
+   uv run python -m ipykernel install --user --name 25aimephi --display-name "25aimephi (Python)"
+   ```
+4. Open any notebook (for example `Homework_11_neuro_regression/main.ipynb`) and select the kernel `25aimephi (Python)`.
+
+Sanity check:
+```bash
+uv run python -c "import numpy, torch; print('env ok')"
+```
+
 # Модуль №1 Программирование на python для машнного обучения
 
 Формы контроля: коллоквиум по итогам модуля.

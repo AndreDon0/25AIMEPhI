@@ -1,0 +1,19 @@
+[project]
+name = "25aimephi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.3",
+    "opendatasets>=0.1.22",
+    "pandas>=3.0.1",
+    "scikit-learn>=1.8.0",
+    "scipy>=1.17.1",
+    "seaborn>=0.13.2",
+    "sympy>=1.14.0",
+    "torch>=2.10.0",
+    "umap-learn>=0.5.11",
+]
