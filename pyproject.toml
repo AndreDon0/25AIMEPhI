@@ -9,6 +9,7 @@ dependencies = [
     "ipykernel>=7.2.0",
     "matplotlib>=3.10.8",
     "numpy>=2.4.3",
+    "opencv-python>=4.13.0.92",
     "opendatasets>=0.1.22",
     "pandas>=3.0.1",
     "scikit-learn>=1.8.0",
