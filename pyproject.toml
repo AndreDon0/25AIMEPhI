@@ -17,5 +17,6 @@ dependencies = [
     "seaborn>=0.13.2",
     "sympy>=1.14.0",
     "torch>=2.10.0",
+    "torchvision>=0.25.0",
     "umap-learn>=0.5.11",
 ]
