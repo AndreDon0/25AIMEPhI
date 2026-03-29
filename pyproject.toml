@@ -16,7 +16,10 @@ dependencies = [
     "scipy>=1.17.1",
     "seaborn>=0.13.2",
     "sympy>=1.14.0",
-    "torch>=2.10.0",
-    "torchvision>=0.25.0",
+    "torch>=2.11.0",
+    "torchvision>=0.26.0",
     "umap-learn>=0.5.11",
 ]
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cu128"

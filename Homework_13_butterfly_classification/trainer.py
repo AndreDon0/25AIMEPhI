@@ -67,7 +67,7 @@ class Trainer:
 
         for epoch in range(self.epoch_amount):
             start = dt.datetime.now()
-            print(f"Эпоха: {epoch}", end=" ")
+            print(f"Epoch: {epoch}", end=" ")
             Net.train()
             mean_loss = 0.0
             batch_n = 0
@@ -77,11 +77,23 @@ class Trainer:
                     break
 
                 self.optimizer.zero_grad()
-                batch_X = batch_X.to(self.device)
+                # Keep a stable dtype across NumPy/DataLoader conversions.
+                batch_X = batch_X.to(self.device, dtype=torch.float32)
                 target = target.to(self.device).long()
 
                 predicted_values = Net(batch_X)
+                num_classes = predicted_values.shape[1]
+                min_target = int(target.min().item())
+                max_target = int(target.max().item())
+                if min_target < 0 or max_target >= num_classes:
+                    raise ValueError(
+                        f"Target labels must be in [0, {num_classes - 1}], "
+                        f"got [{min_target}, {max_target}]"
+                    )
                 loss = self.loss_f(predicted_values, target)
+                # Guard against criterion(reduction="none") returning per-sample losses.
+                if loss.ndim > 0:
+                    loss = loss.mean()
                 loss.backward()
                 self.optimizer.step()
 
@@ -90,7 +102,7 @@ class Trainer:
 
             mean_loss /= max(batch_n, 1)
             self.train_loss.append(mean_loss)
-            print(f"Loss_train: {mean_loss}, {dt.datetime.now() - start} сек")
+            print(f"Loss_train: {mean_loss}, {dt.datetime.now() - start} sec")
 
             metric_for_scheduler = self.train_loss[-1]
             if val_loader is not None:
@@ -103,10 +115,20 @@ class Trainer:
                         if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
                             break
 
-                        batch_X = batch_X.to(self.device)
+                        batch_X = batch_X.to(self.device, dtype=torch.float32)
                         target = target.to(self.device).long()
                         predicted_values = Net(batch_X)
+                        num_classes = predicted_values.shape[1]
+                        min_target = int(target.min().item())
+                        max_target = int(target.max().item())
+                        if min_target < 0 or max_target >= num_classes:
+                            raise ValueError(
+                                f"Target labels must be in [0, {num_classes - 1}], "
+                                f"got [{min_target}, {max_target}]"
+                            )
                         loss = self.loss_f(predicted_values, target)
+                        if loss.ndim > 0:
+                            loss = loss.mean()
 
                         mean_loss += loss.item()
                         batch_n += 1
@@ -125,7 +147,7 @@ class Trainer:
                     }
                 elif epoch - best_ep > self.early_stopping:
                     print(
-                        f"{self.early_stopping} без улучшений. Прекращаем обучение..."
+                        f"No improvement for {self.early_stopping} epochs. Stopping training..."
                     )
                     break
             if sched is not None:
@@ -152,7 +174,7 @@ class Trainer:
                     batch_X = batch[0]
                 else:
                     batch_X = batch
-                batch_X = batch_X.to(self.device)
+                batch_X = batch_X.to(self.device, dtype=torch.float32)
                 pred = self.best_model(batch_X)
                 out.append(pred.detach().cpu())
 
