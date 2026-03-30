@@ -1,5 +1,6 @@
 import datetime as dt
 import inspect
+from typing import Callable
 
 import torch
 
@@ -38,6 +39,7 @@ class Trainer:
         max_batches_per_epoch=None,
         early_stopping=10,
         scheduler=None,
+        epoch_end_callback: Callable[[int, float, float | None], None] | None = None,
     ):
         self.start_model = net
         self.best_model = net
@@ -48,6 +50,7 @@ class Trainer:
         self.max_batches_per_epoch = max_batches_per_epoch
         self.early_stopping = early_stopping
         self.scheduler = scheduler
+        self.epoch_end_callback = epoch_end_callback
 
         self.train_loss = []
         self.val_loss = []
@@ -104,6 +107,9 @@ class Trainer:
             self.train_loss.append(mean_loss)
             print(f"Loss_train: {mean_loss}, {dt.datetime.now() - start} sec")
 
+            if val_loader is None and self.epoch_end_callback is not None:
+                self.epoch_end_callback(epoch, self.train_loss[-1], None)
+
             metric_for_scheduler = self.train_loss[-1]
             if val_loader is not None:
                 Net.eval()
@@ -137,6 +143,10 @@ class Trainer:
                 self.val_loss.append(mean_loss)
                 metric_for_scheduler = mean_loss
                 print(f"Loss_val: {mean_loss}")
+
+                if self.epoch_end_callback is not None:
+                    # Called exactly once per epoch after both train+val losses are computed.
+                    self.epoch_end_callback(epoch, self.train_loss[-1], self.val_loss[-1])
 
                 if mean_loss < best_val_loss:
                     best_val_loss = mean_loss
