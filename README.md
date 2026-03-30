@@ -69,7 +69,11 @@ uv run python -c "import numpy, torch; print('env ok')"
 [30] [НС для задачи регрессии](https://github.com/ShadarRim/25AIMEPhI/blob/main/31_%D0%9D%D0%A1_%D0%A0%D0%B5%D0%B3%D1%80%D0%B5%D1%81%D1%81%D0%B8%D1%8F.ipynb) \
 [31] [CNN](https://github.com/ShadarRim/25AIMEPhI/blob/main/32_%D0%A1%D0%B2%D1%91%D1%80%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B5%20%D1%81%D0%B5%D1%82%D0%B8.pptx) \
 [32] [MNIST](https://github.com/ShadarRim/25AIMEPhI/blob/main/33_MNIST_CNN.ipynb) \
-
+[33] [Работа с изображениями](https://github.com/ShadarRim/25AIMEPhI/blob/main/35_%D0%A3%D0%BB%D1%83%D1%87%D1%88%D0%B5%D0%BD%D0%B8%D0%B5_%D0%BA%D0%B0%D1%87%D0%B5%D1%81%D1%82%D0%B2%D0%B0_%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D1%8F_%D0%BD%D0%B5%D0%B9%D1%80%D0%BE%D1%81%D0%B5%D1%82%D0%B5%D0%B9.ipynb) \
+[34] [Улучшение качества обучения нейронной сети](https://colab.research.google.com/drive/1vINdRci8tc760Q4mzv-jIQJG5RQn6HuT?usp=sharing)\
+[35] [Об аугментации](https://github.com/ShadarRim/25AIMEPhI/blob/main/36_%D0%9D%D0%B5%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE_%D0%BF%D1%80%D0%BE_%D0%B0%D1%83%D0%B3%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8E.ipynb)\
+[36] [Задачи компьютерного зрения](https://github.com/ShadarRim/25AIMEPhI/blob/main/37_%D0%97%D0%B0%D0%B4%D0%B0%D1%87%D0%B8_%D0%9A%D0%97.pptx)\
+[37] [Рещение задачи сегментации "из коробки"](https://github.com/ShadarRim/25AIMEPhI/blob/main/38_%D0%A1%D0%B5%D0%B3%D0%B5%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F_Pytorch_box.ipynb)
 
 # Самостоятельная работа на паре
 [1] [Python](https://contest.yandex.ru/contest/81119/enter) \
@@ -98,7 +102,11 @@ uv run python -c "import numpy, torch; print('env ok')"
 [14] Обязательное ДЗ№3. Решить задачу классификации из прошлого семестра с использованием полносвязной НС. \
 [15] [Обязательное ДЗ№4. Решить задачу классификации бабочек (late submission).](https://www.kaggle.com/competitions/classification-of-butterflies) \
 [16] Обязательное ДЗ№5. Повысить точность решения MNIST до 98%. \
-[17] [Обязательное ДЗ№5. Решить задачу с точностью не менее 95%.](https://www.kaggle.com/c/platesv2)
+[17] [Обязательное ДЗ№6. Решить задачу с точностью не менее 95%.](https://www.kaggle.com/c/platesv2) \
+[18] [Обязательное ДЗ№7. Решить задачу на нахождение объектов](https://www.kaggle.com/competitions/find-the-seagulls/overview) \
+[19] [Обязательное ДЗ№8. Решить задачу сегментации кружочков.](https://github.com/ShadarRim/25AIMEPhI/blob/main/a07_%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BA%D1%80%D1%83%D0%B6%D0%BE%D1%87%D0%BA%D0%BE%D0%B2.ipynb) \
+[20] [Обязательное ДЗ№9. Решить задачу классификации объектов на видео](https://www.kaggle.com/competitions/what-on-the-video/overview) \
+[21] [Обязательное ДЗ№10. Сгенрировать с помощью GAN или диффузионной модели собственное сэлфи] \
 
 # Дополнительные материалы
 [0] [Пара фишек по работе с Python](https://github.com/ShadarRim/25AIMEPhI/blob/main/a00_%D0%9F%D0%B0%D1%80%D0%B0_%D1%84%D0%B8%D1%88%D0%B5%D0%BA%20Python.ipynb)\
