@@ -1,0 +1,6 @@
+path: .
+train: data/train/images
+val: data/val/images
+nc: 1
+names:
+  0: seagull
