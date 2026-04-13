@@ -185,7 +185,13 @@ class Trainer:
         self.best_model.to(self.device)
         out = []
         with torch.no_grad():
-            for batch in test_loader:
+            predict_pbar = tqdm(
+                test_loader,
+                desc="Predict",
+                total=len(test_loader) if hasattr(test_loader, "__len__") else None,
+                leave=False,
+            )
+            for batch in predict_pbar:
                 if isinstance(batch, (list, tuple)):
                     batch_X = batch[0]
                 else:

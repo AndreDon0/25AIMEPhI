@@ -31,7 +31,17 @@ def read_all_frames_rgb(
 
     Uniformly samples ``num_frames`` frames along the video timeline. Shorter videos are padded
     by repeating the last frame until ``num_frames`` is reached.
+
+    Decoded arrays are cached as ``.npy`` files next to the source video so that
+    subsequent epochs / notebook restarts skip the expensive PyAV decode entirely.
     """
+    basename = os.path.splitext(os.path.basename(path))[0]
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(path)), ".video_cache")
+    cache_file = os.path.join(cache_dir, f"{basename}_{width}x{height}_{num_frames}.npy")
+
+    if os.path.isfile(cache_file):
+        return np.load(cache_file)
+
     frames = []
     with av.open(path, metadata_errors="replace") as container:
         stream = container.streams.video[0]
@@ -46,11 +56,14 @@ def read_all_frames_rgb(
     t = video.shape[0]
     if t < num_frames:
         pad = np.repeat(video[-1:], num_frames - t, axis=0)
-        return np.concatenate([video, pad], axis=0)
-    if t == num_frames:
-        return video
-    idx = np.linspace(0, t - 1, num_frames, dtype=int)
-    return video[idx]
+        video = np.concatenate([video, pad], axis=0)
+    elif t > num_frames:
+        idx = np.linspace(0, t - 1, num_frames, dtype=int)
+        video = video[idx]
+
+    os.makedirs(cache_dir, exist_ok=True)
+    np.save(cache_file, video)
+    return video
 
 
 class TrainDataset(Dataset):
@@ -71,6 +84,9 @@ class TrainDataset(Dataset):
         video_path = os.path.join(self.data_path, self.labels['path'][index])
         video = read_all_frames_rgb(video_path)
         return _videomae_pixel_values(video), torch.tensor(self.labels.iloc[index].values.tolist()[1:], dtype=torch.float32)
+    
+    def get_classes(self):
+        return self.labels.columns.tolist()[1:]
 
 
 class TestDataset(Dataset):
