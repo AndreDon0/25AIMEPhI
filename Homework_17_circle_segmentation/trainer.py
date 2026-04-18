@@ -26,6 +26,7 @@ class Trainer:
         fit(train_loader, val_loader=None): обучение (с валидацией или без)
         predict(test_loader): предсказания для батчей без меток, tensor на CPU
         save(path): сохраняет checkpoint с лучшей моделью и историей обучения
+        load(path): загружает checkpoint из .pt (модель и история loss, см. save)
     """
 
     def __init__(
@@ -181,3 +182,21 @@ class Trainer:
             "val_loss": self.val_loss,
         }
         torch.save(checkpoint, path)
+
+    def load(self, path, map_location=None):
+        """
+        Load weights and optional training history from a .pt file written by save().
+
+        If the file is a raw state_dict (only tensors), only the model weights are restored.
+        """
+        if map_location is None:
+            map_location = self.device
+        checkpoint = torch.load(path, map_location=map_location, weights_only=False)
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            self.best_model.load_state_dict(checkpoint["model_state_dict"])
+            if "train_loss" in checkpoint and checkpoint["train_loss"] is not None:
+                self.train_loss = list(checkpoint["train_loss"])
+            if "val_loss" in checkpoint and checkpoint["val_loss"] is not None:
+                self.val_loss = list(checkpoint["val_loss"])
+        else:
+            self.best_model.load_state_dict(checkpoint)
