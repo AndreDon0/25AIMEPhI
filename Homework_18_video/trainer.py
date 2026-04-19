@@ -2,7 +2,11 @@ import datetime as dt
 import inspect
 
 import torch
-from tqdm.auto import tqdm
+
+
+def _to_logits(output):
+    """HF classification models return a ModelOutput with .logits; plain modules return a tensor."""
+    return output.logits if hasattr(output, "logits") else output
 
 
 class Trainer:
@@ -27,6 +31,7 @@ class Trainer:
         fit(train_loader, val_loader=None): обучение (с валидацией или без)
         predict(test_loader): предсказания для батчей без меток, tensor на CPU
         save(path): сохраняет checkpoint с лучшей моделью и историей обучения
+        load(path): загружает checkpoint из .pt (модель и история loss, см. save)
     """
 
     def __init__(
@@ -54,32 +59,19 @@ class Trainer:
         self.train_loss = []
         self.val_loss = []
 
-    def _batch_bar_total(self, loader):
-        if self.max_batches_per_epoch is None:
-            return len(loader) if hasattr(loader, "__len__") else None
-        if hasattr(loader, "__len__"):
-            return min(len(loader), self.max_batches_per_epoch)
-        return self.max_batches_per_epoch
-
-    @staticmethod
-    def _logits(outputs):
-        """HF models return ModelOutput with `.logits`; plain modules return logits tensor."""
-        return outputs.logits if hasattr(outputs, "logits") else outputs
-
-    @staticmethod
-    def _prepare_target(target: torch.Tensor, device) -> torch.Tensor:
-        """Multi-label (B, C) with C>1 → float for BCEWithLogitsLoss; else class indices long."""
-        target = target.to(device)
-        if target.dim() == 2 and target.shape[1] > 1:
-            return target.float()
-        if target.dim() == 2 and target.shape[1] == 1:
-            return target.squeeze(1).long()
-        return target.long()
-
     def fit(self, train_loader, val_loader=None):
         Net = self.start_model
         Net.to(self.device)
         Net.train()
+
+        device_type = getattr(self.device, "type", None)
+        if device_type is None:
+            # Fallback for string devices like "cpu"
+            device_type = str(self.device)
+        use_amp = device_type == "cuda"
+
+        # New AMP API (PyTorch 2.4+): torch.amp.* instead of torch.cuda.amp.*
+        scaler = torch.amp.GradScaler("cuda", enabled=bool(use_amp))
 
         sched = None
         if self.scheduler is not None:
@@ -96,28 +88,24 @@ class Trainer:
             mean_loss = 0.0
             batch_n = 0
 
-            train_pbar = tqdm(
-                train_loader,
-                desc=f"Epoch {epoch} train",
-                total=self._batch_bar_total(train_loader),
-                leave=False,
-            )
-            for batch_X, target in train_pbar:
+            for batch_X, target in train_loader:
                 if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
                     break
 
                 self.optimizer.zero_grad()
-                batch_X = batch_X.to(self.device)
-                target = self._prepare_target(target, self.device)
+                batch_X = batch_X.to(self.device, non_blocking=True)
+                target = target.to(self.device, non_blocking=True).long()
 
-                logits = self._logits(Net(batch_X))
-                loss = self.loss_f(logits, target)
-                loss.backward()
-                self.optimizer.step()
+                with torch.amp.autocast("cuda", enabled=bool(use_amp)):
+                    predicted_values = _to_logits(Net(batch_X))
+                    loss = self.loss_f(predicted_values, target)
+
+                scaler.scale(loss).backward()
+                scaler.step(self.optimizer)
+                scaler.update()
 
                 mean_loss += loss.item()
                 batch_n += 1
-                train_pbar.set_postfix(loss=f"{loss.item():.4f}")
 
             mean_loss /= max(batch_n, 1)
             self.train_loss.append(mean_loss)
@@ -130,24 +118,18 @@ class Trainer:
                 batch_n = 0
 
                 with torch.no_grad():
-                    val_pbar = tqdm(
-                        val_loader,
-                        desc=f"Epoch {epoch} val",
-                        total=self._batch_bar_total(val_loader),
-                        leave=False,
-                    )
-                    for batch_X, target in val_pbar:
+                    for batch_X, target in val_loader:
                         if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
                             break
 
-                        batch_X = batch_X.to(self.device)
-                        target = self._prepare_target(target, self.device)
-                        logits = self._logits(Net(batch_X))
-                        loss = self.loss_f(logits, target)
+                        batch_X = batch_X.to(self.device, non_blocking=True)
+                        target = target.to(self.device, non_blocking=True).long()
+                        with torch.amp.autocast("cuda", enabled=bool(use_amp)):
+                            predicted_values = _to_logits(Net(batch_X))
+                            loss = self.loss_f(predicted_values, target)
 
                         mean_loss += loss.item()
                         batch_n += 1
-                        val_pbar.set_postfix(loss=f"{loss.item():.4f}")
 
                 mean_loss /= max(batch_n, 1)
                 self.val_loss.append(mean_loss)
@@ -185,19 +167,13 @@ class Trainer:
         self.best_model.to(self.device)
         out = []
         with torch.no_grad():
-            predict_pbar = tqdm(
-                test_loader,
-                desc="Predict",
-                total=len(test_loader) if hasattr(test_loader, "__len__") else None,
-                leave=False,
-            )
-            for batch in predict_pbar:
+            for batch in test_loader:
                 if isinstance(batch, (list, tuple)):
                     batch_X = batch[0]
                 else:
                     batch_X = batch
                 batch_X = batch_X.to(self.device)
-                pred = self._logits(self.best_model(batch_X))
+                pred = _to_logits(self.best_model(batch_X))
                 out.append(pred.detach().cpu())
 
         return torch.cat(out, dim=0)
@@ -211,3 +187,21 @@ class Trainer:
             "val_loss": self.val_loss,
         }
         torch.save(checkpoint, path)
+
+    def load(self, path, map_location=None):
+        """
+        Load weights and optional training history from a .pt file written by save().
+
+        If the file is a raw state_dict (only tensors), only the model weights are restored.
+        """
+        if map_location is None:
+            map_location = self.device
+        checkpoint = torch.load(path, map_location=map_location, weights_only=False)
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            self.best_model.load_state_dict(checkpoint["model_state_dict"])
+            if "train_loss" in checkpoint and checkpoint["train_loss"] is not None:
+                self.train_loss = list(checkpoint["train_loss"])
+            if "val_loss" in checkpoint and checkpoint["val_loss"] is not None:
+                self.val_loss = list(checkpoint["val_loss"])
+        else:
+            self.best_model.load_state_dict(checkpoint)
