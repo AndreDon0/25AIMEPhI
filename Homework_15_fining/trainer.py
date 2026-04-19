@@ -4,6 +4,11 @@ import inspect
 import torch
 
 
+def _to_logits(output):
+    """HF classification models return a ModelOutput with .logits; plain modules return a tensor."""
+    return output.logits if hasattr(output, "logits") else output
+
+
 class Trainer:
     """
     Parameters:
@@ -26,6 +31,7 @@ class Trainer:
         fit(train_loader, val_loader=None): обучение (с валидацией или без)
         predict(test_loader): предсказания для батчей без меток, tensor на CPU
         save(path): сохраняет checkpoint с лучшей моделью и историей обучения
+        load(path): загружает checkpoint из .pt (модель и история loss, см. save)
     """
 
     def __init__(
@@ -58,6 +64,15 @@ class Trainer:
         Net.to(self.device)
         Net.train()
 
+        device_type = getattr(self.device, "type", None)
+        if device_type is None:
+            # Fallback for string devices like "cpu"
+            device_type = str(self.device)
+        use_amp = device_type == "cuda"
+
+        # New AMP API (PyTorch 2.4+): torch.amp.* instead of torch.cuda.amp.*
+        scaler = torch.amp.GradScaler("cuda", enabled=bool(use_amp))
+
         sched = None
         if self.scheduler is not None:
             sched = self.scheduler(self.optimizer)
@@ -78,13 +93,16 @@ class Trainer:
                     break
 
                 self.optimizer.zero_grad()
-                batch_X = batch_X.to(self.device)
-                target = target.to(self.device).long()
+                batch_X = batch_X.to(self.device, non_blocking=True)
+                target = target.to(self.device, non_blocking=True).long()
 
-                predicted_values = Net(batch_X)
-                loss = self.loss_f(predicted_values, target)
-                loss.backward()
-                self.optimizer.step()
+                with torch.amp.autocast("cuda", enabled=bool(use_amp)):
+                    predicted_values = _to_logits(Net(batch_X))
+                    loss = self.loss_f(predicted_values, target)
+
+                scaler.scale(loss).backward()
+                scaler.step(self.optimizer)
+                scaler.update()
 
                 mean_loss += loss.item()
                 batch_n += 1
@@ -104,10 +122,11 @@ class Trainer:
                         if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
                             break
 
-                        batch_X = batch_X.to(self.device)
-                        target = target.to(self.device).long()
-                        predicted_values = Net(batch_X)
-                        loss = self.loss_f(predicted_values, target)
+                        batch_X = batch_X.to(self.device, non_blocking=True)
+                        target = target.to(self.device, non_blocking=True).long()
+                        with torch.amp.autocast("cuda", enabled=bool(use_amp)):
+                            predicted_values = _to_logits(Net(batch_X))
+                            loss = self.loss_f(predicted_values, target)
 
                         mean_loss += loss.item()
                         batch_n += 1
@@ -154,7 +173,7 @@ class Trainer:
                 else:
                     batch_X = batch
                 batch_X = batch_X.to(self.device)
-                pred = self.best_model(batch_X)
+                pred = _to_logits(self.best_model(batch_X))
                 out.append(pred.detach().cpu())
 
         return torch.cat(out, dim=0)
@@ -168,3 +187,21 @@ class Trainer:
             "val_loss": self.val_loss,
         }
         torch.save(checkpoint, path)
+
+    def load(self, path, map_location=None):
+        """
+        Load weights and optional training history from a .pt file written by save().
+
+        If the file is a raw state_dict (only tensors), only the model weights are restored.
+        """
+        if map_location is None:
+            map_location = self.device
+        checkpoint = torch.load(path, map_location=map_location, weights_only=False)
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            self.best_model.load_state_dict(checkpoint["model_state_dict"])
+            if "train_loss" in checkpoint and checkpoint["train_loss"] is not None:
+                self.train_loss = list(checkpoint["train_loss"])
+            if "val_loss" in checkpoint and checkpoint["val_loss"] is not None:
+                self.val_loss = list(checkpoint["val_loss"])
+        else:
+            self.best_model.load_state_dict(checkpoint)
