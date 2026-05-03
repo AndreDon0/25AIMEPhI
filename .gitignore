@@ -4,3 +4,4 @@ kaggle.json
 catboost_info/
 Students/
 runs/
+__pycache__/
