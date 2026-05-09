@@ -1,207 +1,206 @@
-import datetime as dt
-import inspect
+"""GAN trainer with a few standard stability tricks.
+
+Compared to the textbook vanilla loop, this trainer adds:
+
+* BCEWithLogitsLoss (the discriminator now returns logits, no Sigmoid)
+  - sigmoid_cross_entropy_with_logits is numerically stabler than
+    Sigmoid -> BCELoss when the logit becomes large/small.
+* One-sided label smoothing: real labels are 0.9 instead of 1.0.
+  This caps the discriminator's confidence on real data and prevents
+  the "D collapses to 1.0 everywhere on reals" failure mode that is
+  common with small datasets.  See Salimans et al. 2016, "Improved
+  Techniques for Training GANs".
+* A fixed evaluation noise tensor.  Tracking the same z over training
+  shows whether the generator is actually moving or stuck/colla psed.
+* Optional callback hook (`on_epoch_end`) so the notebook can render
+  sample grids during training.
+* Independent forward passes for G and D to keep the BatchNorm running
+  stats sane (avoids reusing a fake batch generated under one set of G
+  parameters when computing D's loss).
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Optional
 
 import torch
+import torch.nn as nn
+from tqdm.auto import tqdm
+
+from diff_augment import diff_augment
 
 
-def _to_logits(output):
-    """HF classification models return a ModelOutput with .logits; plain modules return a tensor."""
-    return output.logits if hasattr(output, "logits") else output
-
-
-class Trainer:
-    """
-    Parameters:
-        net: модель (torch.nn.Module)
-        criterion: функция потерь
-        optimizer: уже созданный оптимизатор (например Adam(net.parameters(), lr=...))
-        device: устройство для вычислений
-        epoch_amount: число эпох
-        max_batches_per_epoch: ограничение числа батчей за эпоху (train/val) или None
-        early_stopping: остановка, если val loss не улучшается столько эпох
-        scheduler: фабрика расписания шага, scheduler(optimizer) или None
-
-    Attributes:
-        start_model: исходная модель
-        best_model: ссылка на модель при лучшем val loss (та же сеть, что и start_model)
-        train_loss: средний loss по эпохам на train
-        val_loss: средний loss по эпохам на val
-
-    Methods:
-        fit(train_loader, val_loader=None): обучение (с валидацией или без)
-        predict(test_loader): предсказания для батчей без меток, tensor на CPU
-        save(path): сохраняет checkpoint с лучшей моделью и историей обучения
-        load(path): загружает checkpoint из .pt (модель и история loss, см. save)
-    """
-
+class GANTrainer:
     def __init__(
         self,
-        net,
-        criterion,
-        optimizer,
-        device,
-        *,
-        epoch_amount=1000,
-        max_batches_per_epoch=None,
-        early_stopping=10,
-        scheduler=None,
+        generator: nn.Module,
+        discriminator: nn.Module,
+        generator_optimizer: torch.optim.Optimizer,
+        discriminator_optimizer: torch.optim.Optimizer,
+        adversarial_loss: nn.Module,
+        device: torch.device | str,
+        epochs: int = 10,
+        latent_dim: Optional[int] = None,
+        real_label_smoothing: float = 0.9,
+        fixed_noise_size: int = 16,
+        on_epoch_end: Optional[Callable[["GANTrainer", int], None]] = None,
+        diff_augment_policy: str = "",
     ):
-        self.start_model = net
-        self.best_model = net
-        self.loss_f = criterion
-        self.optimizer = optimizer
+        self.generator = generator
+        self.discriminator = discriminator
+        self.generator_optimizer = generator_optimizer
+        self.discriminator_optimizer = discriminator_optimizer
+        self.adversarial_loss = adversarial_loss
         self.device = device
-        self.epoch_amount = epoch_amount
-        self.max_batches_per_epoch = max_batches_per_epoch
-        self.early_stopping = early_stopping
-        self.scheduler = scheduler
+        self.epochs = epochs
+        self.latent_dim = latent_dim or self._infer_latent_dim()
+        self.real_label_smoothing = real_label_smoothing
+        self.on_epoch_end = on_epoch_end
+        self.diff_augment_policy = diff_augment_policy
 
-        self.train_loss = []
-        self.val_loss = []
+        self.generator_loss_history: list[float] = []
+        self.discriminator_loss_history: list[float] = []
 
-    def fit(self, train_loader, val_loader=None):
-        Net = self.start_model
-        Net.to(self.device)
-        Net.train()
+        # A frozen z that we re-feed every epoch so visual progress is
+        # comparable across epochs (same "view" of latent space).
+        self.fixed_noise = torch.randn(
+            fixed_noise_size, self.latent_dim, device=self.device
+        )
 
-        device_type = getattr(self.device, "type", None)
-        if device_type is None:
-            # Fallback for string devices like "cpu"
-            device_type = str(self.device)
-        use_amp = device_type == "cuda"
+    def _infer_latent_dim(self) -> int:
+        """Look up generator.latent_dim if available, else error out cleanly."""
+        if hasattr(self.generator, "latent_dim"):
+            return int(self.generator.latent_dim)
+        raise ValueError(
+            "latent_dim is not provided and could not be inferred. "
+            "Pass latent_dim=<int> to GANTrainer."
+        )
 
-        # New AMP API (PyTorch 2.4+): torch.amp.* instead of torch.cuda.amp.*
-        scaler = torch.amp.GradScaler("cuda", enabled=bool(use_amp))
+    @staticmethod
+    def _extract_images_from_batch(batch):
+        # Datasets sometimes return (image, label); we only need the image.
+        if isinstance(batch, (list, tuple)):
+            return batch[0]
+        return batch
 
-        sched = None
-        if self.scheduler is not None:
-            sched = self.scheduler(self.optimizer)
+    def _sample_noise(self, batch_size: int) -> torch.Tensor:
+        return torch.randn((batch_size, self.latent_dim), device=self.device)
 
-        best_val_loss = float("inf")
-        best_ep = 0
-        best_state_dict = None
+    def _make_targets(self, batch_size: int):
+        real_targets = torch.full(
+            (batch_size, 1), self.real_label_smoothing, device=self.device
+        )
+        fake_targets = torch.zeros((batch_size, 1), device=self.device)
+        return real_targets, fake_targets
 
-        for epoch in range(self.epoch_amount):
-            start = dt.datetime.now()
-            print(f"Эпоха: {epoch}", end=" ")
-            Net.train()
-            mean_loss = 0.0
-            batch_n = 0
+    def _augment_for_d(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply DiffAugment to anything that is about to be fed into D.
 
-            for batch_X, target in train_loader:
-                if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
-                    break
+        The same policy is applied to real and fake inputs - this is the
+        critical invariant of DiffAugment.  Each call samples fresh
+        random augmentations, so D never sees the same augmented view
+        twice.
+        """
+        return diff_augment(x, self.diff_augment_policy)
 
-                self.optimizer.zero_grad()
-                batch_X = batch_X.to(self.device, non_blocking=True)
-                target = target.to(self.device, non_blocking=True).long()
+    def _discriminator_step(
+        self,
+        real_images: torch.Tensor,
+        real_targets: torch.Tensor,
+        fake_targets: torch.Tensor,
+    ) -> torch.Tensor:
+        self.discriminator_optimizer.zero_grad(set_to_none=True)
 
-                with torch.amp.autocast("cuda", enabled=bool(use_amp)):
-                    predicted_values = _to_logits(Net(batch_X))
-                    loss = self.loss_f(predicted_values, target)
+        real_preds = self.discriminator(self._augment_for_d(real_images))
+        real_loss = self.adversarial_loss(real_preds, real_targets)
 
-                scaler.scale(loss).backward()
-                scaler.step(self.optimizer)
-                scaler.update()
-
-                mean_loss += loss.item()
-                batch_n += 1
-
-            mean_loss /= max(batch_n, 1)
-            self.train_loss.append(mean_loss)
-            print(f"Loss_train: {mean_loss}, {dt.datetime.now() - start} сек")
-
-            metric_for_scheduler = self.train_loss[-1]
-            if val_loader is not None:
-                Net.eval()
-                mean_loss = 0.0
-                batch_n = 0
-
-                with torch.no_grad():
-                    for batch_X, target in val_loader:
-                        if self.max_batches_per_epoch is not None and batch_n >= self.max_batches_per_epoch:
-                            break
-
-                        batch_X = batch_X.to(self.device, non_blocking=True)
-                        target = target.to(self.device, non_blocking=True).long()
-                        with torch.amp.autocast("cuda", enabled=bool(use_amp)):
-                            predicted_values = _to_logits(Net(batch_X))
-                            loss = self.loss_f(predicted_values, target)
-
-                        mean_loss += loss.item()
-                        batch_n += 1
-
-                mean_loss /= max(batch_n, 1)
-                self.val_loss.append(mean_loss)
-                metric_for_scheduler = mean_loss
-                print(f"Loss_val: {mean_loss}")
-
-                if mean_loss < best_val_loss:
-                    best_val_loss = mean_loss
-                    best_ep = epoch
-                    # Freeze best weights for later predict().
-                    best_state_dict = {
-                        k: v.detach().cpu().clone() for k, v in Net.state_dict().items()
-                    }
-                elif epoch - best_ep > self.early_stopping:
-                    print(
-                        f"{self.early_stopping} без улучшений. Прекращаем обучение..."
-                    )
-                    break
-            if sched is not None:
-                # PyTorch 2.x ReduceLROnPlateau.step(metrics=...) — avoid isinstance
-                # (reload/Jupyter quirks) and plain .step() which omits required metrics.
-                sig = inspect.signature(sched.step)
-                if "metrics" in sig.parameters:
-                    sched.step(metrics=metric_for_scheduler)
-                else:
-                    sched.step()
-            print()
-
-        # Load best weights once at the end of training (or early stopping).
-        if best_state_dict is not None:
-            self.best_model.load_state_dict(best_state_dict)
-
-    def predict(self, test_loader):
-        self.best_model.eval()
-        self.best_model.to(self.device)
-        out = []
         with torch.no_grad():
-            for batch in test_loader:
-                if isinstance(batch, (list, tuple)):
-                    batch_X = batch[0]
-                else:
-                    batch_X = batch
-                batch_X = batch_X.to(self.device)
-                pred = _to_logits(self.best_model(batch_X))
-                out.append(pred.detach().cpu())
+            noise = self._sample_noise(real_images.size(0))
+            generated = self.generator(noise)
 
-        return torch.cat(out, dim=0)
+        fake_preds = self.discriminator(self._augment_for_d(generated))
+        fake_loss = self.adversarial_loss(fake_preds, fake_targets)
 
-    def save(self, path):
-        checkpoint = {
-            "model_state_dict": {
-                k: v.detach().cpu().clone() for k, v in self.best_model.state_dict().items()
-            },
-            "train_loss": self.train_loss,
-            "val_loss": self.val_loss,
-        }
-        torch.save(checkpoint, path)
+        d_loss = (real_loss + fake_loss) / 2
+        d_loss.backward()
+        self.discriminator_optimizer.step()
+        return d_loss
 
-    def load(self, path, map_location=None):
-        """
-        Load weights and optional training history from a .pt file written by save().
+    def _generator_step(self, batch_size: int) -> torch.Tensor:
+        self.generator_optimizer.zero_grad(set_to_none=True)
 
-        If the file is a raw state_dict (only tensors), only the model weights are restored.
-        """
-        if map_location is None:
-            map_location = self.device
-        checkpoint = torch.load(path, map_location=map_location, weights_only=False)
-        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-            self.best_model.load_state_dict(checkpoint["model_state_dict"])
-            if "train_loss" in checkpoint and checkpoint["train_loss"] is not None:
-                self.train_loss = list(checkpoint["train_loss"])
-            if "val_loss" in checkpoint and checkpoint["val_loss"] is not None:
-                self.val_loss = list(checkpoint["val_loss"])
-        else:
-            self.best_model.load_state_dict(checkpoint)
+        noise = self._sample_noise(batch_size)
+        generated = self.generator(noise)
+        # G wants D to think generated images are real, so target is 1.0.
+        # We deliberately do NOT label-smooth here (smoothing is only on
+        # real targets - one-sided smoothing).
+        misleading_targets = torch.ones((batch_size, 1), device=self.device)
+        # IMPORTANT: DiffAugment must be inside the gradient path so its
+        # derivatives flow back through G.  That is the whole point of
+        # the augmentation being differentiable - it teaches G to be
+        # robust to color/translation/cutout perturbations.
+        preds = self.discriminator(self._augment_for_d(generated))
+        g_loss = self.adversarial_loss(preds, misleading_targets)
+        g_loss.backward()
+        self.generator_optimizer.step()
+        return g_loss
+
+    def _train_epoch(self, loader) -> tuple[float, float]:
+        g_sum, d_sum, n = 0.0, 0.0, 0
+        for batch in loader:
+            images = self._extract_images_from_batch(batch)
+            real_images = images.to(self.device, dtype=torch.float32)
+            batch_size = real_images.size(0)
+            real_targets, fake_targets = self._make_targets(batch_size)
+
+            d_loss = self._discriminator_step(
+                real_images=real_images,
+                real_targets=real_targets,
+                fake_targets=fake_targets,
+            )
+            g_loss = self._generator_step(batch_size=batch_size)
+
+            g_sum += float(g_loss.detach().item())
+            d_sum += float(d_loss.detach().item())
+            n += 1
+
+        n = max(n, 1)
+        return g_sum / n, d_sum / n
+
+    def fit(self, loader) -> None:
+        self.generator.to(self.device)
+        self.discriminator.to(self.device)
+        self.generator.train()
+        self.discriminator.train()
+
+        epoch_bar = tqdm(range(self.epochs), desc="Epochs")
+        for epoch in epoch_bar:
+            g_loss_epoch, d_loss_epoch = self._train_epoch(loader)
+
+            self.generator_loss_history.append(g_loss_epoch)
+            self.discriminator_loss_history.append(d_loss_epoch)
+            epoch_bar.set_postfix(
+                g_loss=f"{g_loss_epoch:.4f}",
+                d_loss=f"{d_loss_epoch:.4f}",
+            )
+
+            if self.on_epoch_end is not None:
+                self.on_epoch_end(self, epoch)
+
+    @torch.no_grad()
+    def predict(self, num_samples: int) -> torch.Tensor:
+        self.generator.eval()
+        self.generator.to(self.device)
+        noise = self._sample_noise(num_samples)
+        pred = self.generator(noise)
+        self.generator.train()
+        return pred.detach().cpu()
+
+    @torch.no_grad()
+    def predict_fixed(self) -> torch.Tensor:
+        """Generate samples from the trainer's frozen evaluation noise."""
+        self.generator.eval()
+        pred = self.generator(self.fixed_noise)
+        self.generator.train()
+        return pred.detach().cpu()
