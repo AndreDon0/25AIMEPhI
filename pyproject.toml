@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "accelerate>=1.1.0",
     "av>=17.0.0",
     "clip",
+    "datasets>=4.0.0",
     "fastparquet>=2026.3.0",
     "imblearn>=0.0",
     "ipykernel>=7.2.0",
