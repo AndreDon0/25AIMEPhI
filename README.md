@@ -113,16 +113,21 @@ uv run python -c "import numpy, torch; print('env ok')"
 [18] [Обязательное ДЗ№7. Решить задачу на нахождение объектов](https://www.kaggle.com/competitions/find-the-seagulls/overview) \
 [19] [Обязательное ДЗ№8. Решить задачу сегментации кружочков.](https://github.com/ShadarRim/25AIMEPhI/blob/main/a07_%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BA%D1%80%D1%83%D0%B6%D0%BE%D1%87%D0%BA%D0%BE%D0%B2.ipynb) \
 [20] [Обязательное ДЗ№9. Решить задачу классификации объектов на видео](https://www.kaggle.com/competitions/what-on-the-video/overview) \
-[21] [Обязательное ДЗ№10. Сгенрировать с помощью GAN или диффузионной модели собственное сэлфи] \
-[22] [Обязательное ДЗ№11. Реализовать расшифроку шифра цезарзя текста.]\
-[23] [Обязательное ДЗ№12. Сделайте собственные ячейки LSTM и GRU, сравните их.]\
-[24] [Обязательное ДЗ№13. Решите задачу классификации трансфомером на наборе данных](https://huggingface.co/datasets/imdb)
+[21] Обязательное ДЗ№10. Сгенрировать с помощью GAN или диффузионной модели собственное сэлфи \
+[22] Обязательное ДЗ№11. Реализовать расшифроку шифра цезарзя текста. \
+[23] Обязательное ДЗ№12. Сделайте собственные ячейки LSTM и GRU, сравните их. \
+[24] [Обязательное ДЗ№13. Решите задачу классификации трансфомером на наборе данных](https://huggingface.co/datasets/stanfordnlp/imdb)
 
 # Дополнительные материалы
 [0] [Пара фишек по работе с Python](https://github.com/ShadarRim/25AIMEPhI/blob/main/a00_%D0%9F%D0%B0%D1%80%D0%B0_%D1%84%D0%B8%D1%88%D0%B5%D0%BA%20Python.ipynb)\
 [1] [Работа с файлами в Python](https://github.com/ShadarRim/25AIMEPhI/blob/main/a01_%D0%A0%D0%B0%D0%B1%D0%BE%D1%82%D0%B0_%D1%81_%D1%84%D0%B0%D0%B9%D0%BB%D0%B0%D0%BC%D0%B8.ipynb) \
 [2] [Math](https://github.com/ShadarRim/25AIMEPhI/blob/main/a02_%D0%9C%D0%BE%D0%B4%D1%83%D0%BB%D1%8C_math.ipynb) \
-[3] [Что делает этот код? Numpy](https://github.com/ShadarRim/25AIMEPhI/blob/main/a03_%D0%A7%D1%82%D0%BE_%D0%B4%D0%B5%D0%BB%D0%B0%D0%B5%D1%82_%D1%8D%D1%82%D0%BE%D1%82_%D0%BA%D0%BE%D0%B4.ipynb)
+[3] [Что делает этот код? Numpy](https://github.com/ShadarRim/25AIMEPhI/blob/main/a03_%D0%A7%D1%82%D0%BE_%D0%B4%D0%B5%D0%BB%D0%B0%D0%B5%D1%82_%D1%8D%D1%82%D0%BE%D1%82_%D0%BA%D0%BE%D0%B4.ipynb)\
+[4] [Разные точки спуска на поверхности](https://github.com/ShadarRim/25AIMEPhI/blob/main/a04_%D0%9F%D0%BE%D0%B2%D0%B5%D1%80%D1%85%D0%BD%D0%BE%D1%81%D1%82%D1%8C.gif)\
+[5] [Данные для проверки работы линейной регрессии](https://github.com/ShadarRim/25AIMEPhI/blob/main/a05_salary_data.csv)\
+[6]	[Нейронная сеть Хопфилда](https://github.com/ShadarRim/25AIMEPhI/blob/main/a06_%D0%A5%D0%BE%D0%BF%D1%84%D0%B8%D0%BB%D0%B4.ipynb)\
+[7]	[Код для создания кружочков](https://github.com/ShadarRim/25AIMEPhI/blob/main/a07_%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5%20%D0%BA%D1%80%D1%83%D0%B6%D0%BE%D1%87%D0%BA%D0%BE%D0%B2.ipynb)\
+[8]	[Презентация про обучение без учителя](https://github.com/ShadarRim/25AIMEPhI/blob/main/a08_%D0%9E%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B1%D0%B5%D0%B7%20%D1%83%D1%87%D0%B8%D1%82%D0%B5%D0%BB%D1%8F.pptx)
 
 # Олимпиады и конкурсы
 Участие в олимпиадах и конкурсах позволяет повысить итоговый балл в семестре. 
