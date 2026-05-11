@@ -50,21 +50,21 @@ class Metrics:
 
     def calculate_metrics(self, preds, targets):
         metrics = {
-            "levenshtein_distance": 0,
-            "levenshtein_similarity": 0,
-            "jaccard_similarity": 0,
-            "tfidf_similarity": 0,
-            "sequence_matcher": 0,
-            "bleu_score": 0,
-            "sentence_transformer": 0
+            "levenshtein_distance": [],
+            "levenshtein_similarity": [],
+            "jaccard_similarity": [],
+            "tfidf_similarity": [],
+            "sequence_matcher": [],
+            "bleu_score": [],
+            "sentence_transformer": []
         }
         for pred, target in tqdm(zip(preds, targets), total=len(preds), desc="Calculating metrics"):
-            metrics["levenshtein_distance"] += self.levenshtein_distance(pred, target)
-            metrics["levenshtein_similarity"] += self.levenshtein_similarity(pred, target)
-            metrics["jaccard_similarity"] += self.jaccard_similarity(pred, target)
-            metrics["tfidf_similarity"] += self.tfidf_similarity(pred, target)
-            metrics["sequence_matcher"] += self.sequence_matcher(pred, target)
-            metrics["bleu_score"] += self.bleu_score(pred, target)
-            metrics["sentence_transformer"] += self.sentence_transformer(pred, target)
-        n = len(preds)
-        return DataFrame({"mean": Series(metrics, dtype="float64") / n})
+            metrics["levenshtein_distance"].append(self.levenshtein_distance(pred, target))
+            metrics["levenshtein_similarity"].append(self.levenshtein_similarity(pred, target))
+            metrics["jaccard_similarity"].append(self.jaccard_similarity(pred, target))
+            metrics["tfidf_similarity"].append(self.tfidf_similarity(pred, target))
+            metrics["sequence_matcher"].append(self.sequence_matcher(pred, target))
+            metrics["bleu_score"].append(self.bleu_score(pred, target))
+            metrics["sentence_transformer"].append(self.sentence_transformer(pred, target))
+
+        return DataFrame(metrics)
