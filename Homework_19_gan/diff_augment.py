@@ -1,3 +1,5 @@
+# powered by cursor
+
 """DiffAugment for GAN training in low-data regimes.
 
 Reference:

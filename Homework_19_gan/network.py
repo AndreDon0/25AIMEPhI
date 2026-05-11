@@ -1,3 +1,5 @@
+# powered by cursor
+
 """DCGAN-style Generator and Discriminator.
 
 Why DCGAN and not a pure-MLP "vanilla" GAN?

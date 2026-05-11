@@ -1,3 +1,5 @@
+# powered by cursor
+
 """GAN trainer with a few standard stability tricks.
 
 Compared to the textbook vanilla loop, this trainer adds:
